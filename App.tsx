@@ -1,45 +1,42 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
 import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+  NavigationContainer,
+  NavigationContainerRef,
+} from '@react-navigation/native';
+import { PaperProvider } from 'react-native-paper';
+import { useColorScheme, View, StyleSheet } from 'react-native';
+import { lightTheme, darkTheme } from './src/theme';
+import BottomTabNavigator from './src/navigation/BottomTabNavigator';
+import DrawerMenu from './src/components/DrawerMenu';
+import { useSettingsStore } from './src/store/settingsStore';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+export default function App() {
+  const systemColorScheme = useColorScheme();
+  const { themeMode, loadSettings } = useSettingsStore();
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  const resolvedScheme = themeMode === 'auto' ? systemColorScheme : themeMode;
+  const theme = resolvedScheme === 'dark' ? darkTheme : lightTheme;
+
+  const handleNavigate = (screen: string) => {
+    navigationRef.current?.navigate(screen as never);
+  };
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <PaperProvider theme={theme}>
+        <NavigationContainer ref={navigationRef}>
+          <View style={StyleSheet.absoluteFill}>
+            <BottomTabNavigator />
+            <DrawerMenu onNavigate={handleNavigate} />
+          </View>
+        </NavigationContainer>
+      </PaperProvider>
     </SafeAreaProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
